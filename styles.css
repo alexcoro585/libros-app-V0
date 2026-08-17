@@ -1,0 +1,214 @@
+:root {
+  --color-primary: #2f6f4f;
+  --color-primary-dark: #234f38;
+  --color-bg: #f6f5f1;
+  --color-card: #ffffff;
+  --color-text: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-border: #e0ddd5;
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  padding-bottom: 40px;
+}
+
+.app-header {
+  background-color: var(--color-primary);
+  color: white;
+  padding: env(safe-area-inset-top, 16px) 16px 16px;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  background-color: var(--color-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: var(--color-text-muted);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="file"] {
+  font-size: 1rem;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: #fdfdfc;
+  color: var(--color-text);
+  width: 100%;
+}
+
+input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.preview-portada {
+  margin-top: 10px;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.btn-primary {
+  margin-top: 20px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  background-color: var(--color-primary-dark);
+}
+
+.lista-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.lista-libros {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.libro-item {
+  display: flex;
+  gap: 12px;
+  background-color: var(--color-card);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  align-items: center;
+  position: relative;
+}
+
+.libro-portada {
+  flex-shrink: 0;
+  width: 60px;
+  height: 84px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.libro-portada img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.libro-portada-placeholder {
+  font-size: 1.8rem;
+}
+
+.libro-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.libro-titulo {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.libro-autor {
+  margin: 2px 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.libro-fechas {
+  margin: 2px 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.libro-dias {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.btn-eliminar {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 6px;
+  align-self: flex-start;
+}
+
+.lista-vacia {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-top: 20px;
+}
