@@ -4,20 +4,27 @@
  */
 
 const form = document.getElementById('form-libro');
-const inputFechaFin = document.getElementById('fechaFin');
 const checkboxEnCurso = document.getElementById('enCurso');
+const inputFechaFin = document.getElementById('fechaFin');
+const labelFechaFin = document.getElementById('label-fecha-fin');
 const inputPortada = document.getElementById('portada');
 const previewPortada = document.getElementById('preview-portada');
 const listaLibros = document.getElementById('lista-libros');
 const listaVacia = document.getElementById('lista-vacia');
+const contadorLibros = document.getElementById('contador-libros');
 const btnSubmit = form.querySelector('.btn-primary');
 
 let portadaFile = null;
 
-// Si el usuario marca "en curso", deshabilitamos la fecha de fin.
+// Solo puede haber un libro "en curso" a la vez: si lo marcas, no hace
+// falta indicar fecha de fin todavía.
 checkboxEnCurso.addEventListener('change', () => {
-  inputFechaFin.disabled = checkboxEnCurso.checked;
-  if (checkboxEnCurso.checked) {
+  const enCurso = checkboxEnCurso.checked;
+  inputFechaFin.disabled = enCurso;
+  inputFechaFin.required = !enCurso;
+  labelFechaFin.hidden = enCurso;
+  inputFechaFin.hidden = enCurso;
+  if (enCurso) {
     inputFechaFin.value = '';
   }
 });
@@ -46,25 +53,21 @@ form.addEventListener('submit', async (event) => {
 
   const titulo = document.getElementById('titulo').value.trim();
   const autor = document.getElementById('autor').value.trim();
-  const fechaInicio = document.getElementById('fechaInicio').value;
-  const fechaFin = checkboxEnCurso.checked ? null : (inputFechaFin.value || null);
+  const fechaFin = checkboxEnCurso.checked ? null : inputFechaFin.value;
 
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Guardando...';
 
   try {
-    await saveLibro({
-      titulo,
-      autor,
-      fechaInicio,
-      fechaFin,
-      portadaFile,
-    });
+    await saveLibro({ titulo, autor, fechaFin, portadaFile });
 
     form.reset();
     portadaFile = null;
     previewPortada.hidden = true;
     inputFechaFin.disabled = false;
+    inputFechaFin.required = true;
+    inputFechaFin.hidden = false;
+    labelFechaFin.hidden = false;
 
     await renderLibros();
   } catch (error) {
@@ -75,15 +78,12 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-/**
- * Calcula los días entre fecha de inicio y fecha de fin.
- * Si no hay fecha de fin, devuelve null (libro en curso).
- */
-function calcularDias(fechaInicio, fechaFin) {
-  if (!fechaFin) return null;
-  const inicio = new Date(fechaInicio);
-  const fin = new Date(fechaFin);
-  const diffMs = fin - inicio;
+function hoyISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function diffDias(fechaA, fechaB) {
+  const diffMs = new Date(fechaB) - new Date(fechaA);
   return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
 }
 
@@ -92,14 +92,44 @@ function formatearFecha(fechaISO) {
   return `${dia}/${mes}/${anio}`;
 }
 
+/**
+ * Añade a cada libro su fecha de inicio calculada (el fin del libro
+ * anterior) y los días que tardó en leerlo. `libros` debe venir
+ * ordenado por fecha de fin ascendente (el en curso, si lo hay, al final).
+ */
+function calcularRangosLectura(libros) {
+  let fechaFinAnterior = null;
+
+  return libros.map((libro) => {
+    const fechaInicioCalculada = fechaFinAnterior;
+    const dias = fechaInicioCalculada
+      ? diffDias(fechaInicioCalculada, libro.fechaFin || hoyISO())
+      : null;
+
+    if (libro.fechaFin) {
+      fechaFinAnterior = libro.fechaFin;
+    }
+
+    return { ...libro, fechaInicioCalculada, dias };
+  });
+}
+
 function crearElementoLibro(libro) {
   const li = document.createElement('li');
   li.className = 'libro-item';
 
-  const dias = calcularDias(libro.fechaInicio, libro.fechaFin);
-  const estadoLectura = libro.fechaFin
-    ? `${dias} día${dias === 1 ? '' : 's'}`
-    : 'En curso';
+  let estadoLectura;
+  if (!libro.fechaFin) {
+    estadoLectura = libro.dias !== null ? `En curso · ${libro.dias} días` : 'En curso';
+  } else if (libro.dias !== null) {
+    estadoLectura = `${libro.dias} día${libro.dias === 1 ? '' : 's'}`;
+  } else {
+    estadoLectura = `Terminado el ${formatearFecha(libro.fechaFin)}`;
+  }
+
+  const rangoFechas = libro.fechaInicioCalculada
+    ? `${formatearFecha(libro.fechaInicioCalculada)} ${libro.fechaFin ? '→ ' + formatearFecha(libro.fechaFin) : ''}`
+    : (libro.fechaFin ? `Terminado el ${formatearFecha(libro.fechaFin)}` : '');
 
   const portadaSrc = libro.portada || '';
 
@@ -114,8 +144,8 @@ function crearElementoLibro(libro) {
     <div class="libro-info">
       <h3 class="libro-titulo">${libro.titulo}</h3>
       <p class="libro-autor">${libro.autor}</p>
-      <p class="libro-fechas">${formatearFecha(libro.fechaInicio)} ${libro.fechaFin ? '→ ' + formatearFecha(libro.fechaFin) : ''}</p>
-      <p class="libro-dias">${estadoLectura}</p>
+      ${rangoFechas ? `<p class="libro-fechas">${rangoFechas}</p>` : ''}
+      <p class="libro-dias ${!libro.fechaFin ? 'libro-dias--en-curso' : ''}">${estadoLectura}</p>
     </div>
     <button class="btn-eliminar" data-id="${libro.id}" aria-label="Eliminar libro">✕</button>
   `;
@@ -124,16 +154,21 @@ function crearElementoLibro(libro) {
 }
 
 async function renderLibros() {
-  const libros = await getLibros();
+  const librosAsc = await getLibros();
+  const librosConRangos = calcularRangosLectura(librosAsc);
+  const librosDesc = librosConRangos.slice().reverse();
+
+  contadorLibros.textContent = `${librosAsc.length} libro${librosAsc.length === 1 ? '' : 's'} en tu historial`;
+
   listaLibros.innerHTML = '';
 
-  if (libros.length === 0) {
+  if (librosDesc.length === 0) {
     listaVacia.hidden = false;
     return;
   }
 
   listaVacia.hidden = true;
-  libros.forEach((libro) => {
+  librosDesc.forEach((libro) => {
     listaLibros.appendChild(crearElementoLibro(libro));
   });
 }

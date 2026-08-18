@@ -7,7 +7,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2f6f4f">
+  <meta name="theme-color" content="#243d2e">
 
   <!-- iOS: modo standalone a pantalla completa -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,7 +20,8 @@
 <body>
 
   <header class="app-header">
-    <h1>📚 Mis Libros</h1>
+    <h1>Mis Libros</h1>
+    <p class="app-header-contador" id="contador-libros"></p>
   </header>
 
   <main>
@@ -33,15 +34,13 @@
         <label for="autor">Autor</label>
         <input type="text" id="autor" name="autor" required placeholder="Ej. Gabriel García Márquez">
 
-        <label for="fechaInicio">Fecha de inicio</label>
-        <input type="date" id="fechaInicio" name="fechaInicio" required>
-
-        <label for="fechaFin">Fecha de fin (opcional)</label>
-        <input type="date" id="fechaFin" name="fechaFin">
         <label class="checkbox-label">
           <input type="checkbox" id="enCurso" name="enCurso">
           Todavía lo estoy leyendo (en curso)
         </label>
+
+        <label for="fechaFin" id="label-fecha-fin">Fecha en la que lo terminaste</label>
+        <input type="date" id="fechaFin" name="fechaFin" required>
 
         <label for="portada">Portada</label>
         <input type="file" id="portada" name="portada" accept="image/*" capture="environment">
@@ -52,7 +51,7 @@
     </section>
 
     <section class="lista-section">
-      <h2>Libros leídos</h2>
+      <h2>Historial de lectura</h2>
       <ul id="lista-libros" class="lista-libros"></ul>
       <p id="lista-vacia" class="lista-vacia" hidden>Todavía no has añadido ningún libro.</p>
     </section>

@@ -3,6 +3,9 @@
  * Guarda los libros en Supabase (tabla `libros`) y las portadas en
  * Supabase Storage (bucket `libros-portadas`). El resto de la app (app.js)
  * solo conoce estas funciones, no sabe nada de Supabase.
+ *
+ * Cada libro solo guarda su fecha de fin: la fecha de inicio se calcula
+ * en app.js a partir del fin del libro anterior (se lee uno detrás de otro).
  */
 
 const SUPABASE_URL = 'https://jddklucqhsoqntrnrkbq.supabase.co';
@@ -15,22 +18,22 @@ function mapRowToLibro(row) {
     id: row.id,
     titulo: row.titulo,
     autor: row.autor,
-    fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
     portada: row.portada_url,
   };
 }
 
 /**
- * Devuelve todos los libros guardados, ordenados por fecha de inicio
- * descendente (el más reciente primero).
+ * Devuelve todos los libros guardados, ordenados por fecha de fin
+ * ascendente (el más antiguo primero). El libro en curso (sin fecha
+ * de fin) queda siempre al final, por ser el más reciente.
  * @returns {Promise<Array<Object>>}
  */
 async function getLibros() {
   const { data, error } = await supabaseClient
     .from('libros')
     .select('*')
-    .order('fecha_inicio', { ascending: false });
+    .order('fecha_fin', { ascending: true, nullsFirst: false });
 
   if (error) {
     console.error('Error al obtener los libros:', error);
@@ -61,7 +64,7 @@ async function subirPortada(file) {
 
 /**
  * Guarda un libro nuevo.
- * @param {Object} libro - { titulo, autor, fechaInicio, fechaFin, portadaFile }
+ * @param {Object} libro - { titulo, autor, fechaFin, portadaFile }
  * @returns {Promise<Object>} el libro guardado, con su id generado
  */
 async function saveLibro(libro) {
@@ -72,7 +75,6 @@ async function saveLibro(libro) {
     .insert({
       titulo: libro.titulo,
       autor: libro.autor,
-      fecha_inicio: libro.fechaInicio,
       fecha_fin: libro.fechaFin || null,
       portada_url: portadaUrl,
     })

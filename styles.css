@@ -1,12 +1,15 @@
 :root {
-  --color-primary: #2f6f4f;
-  --color-primary-dark: #234f38;
-  --color-bg: #f6f5f1;
+  --color-primary: #243d2e;
+  --color-primary-dark: #16261b;
+  --color-accent: #b8792f;
+  --color-bg: #f7f3ec;
   --color-card: #ffffff;
-  --color-text: #2b2b2b;
-  --color-text-muted: #6b6b6b;
-  --color-border: #e0ddd5;
-  --radius: 12px;
+  --color-text: #2b2b28;
+  --color-text-muted: #726f68;
+  --color-border: #e6e0d4;
+  --font-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius: 16px;
 }
 
 * {
@@ -15,7 +18,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--color-bg);
   color: var(--color-text);
   padding-bottom: 40px;
@@ -23,33 +26,50 @@ body {
 
 .app-header {
   background-color: var(--color-primary);
-  color: white;
-  padding: env(safe-area-inset-top, 16px) 16px 16px;
+  color: #f2ede1;
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) 20px 20px;
   text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+}
+
+.app-header-contador {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #d8cfba;
 }
 
 main {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px;
 }
 
 .card {
   background-color: var(--color-card);
   border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  margin-bottom: 24px;
+  padding: 22px 20px;
+  box-shadow: 0 2px 10px rgba(36, 61, 46, 0.08);
+  margin-bottom: 28px;
 }
 
-.card h2 {
+.card h2,
+.lista-section h2 {
   margin-top: 0;
-  font-size: 1.1rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: var(--color-primary);
 }
 
 form {
@@ -58,27 +78,30 @@ form {
 }
 
 label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-top: 14px;
+  margin-top: 16px;
   margin-bottom: 6px;
   color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 input[type="text"],
 input[type="date"],
 input[type="file"] {
   font-size: 1rem;
-  padding: 10px 12px;
+  font-family: var(--font-sans);
+  padding: 11px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background-color: #fdfdfc;
+  border-radius: 10px;
+  background-color: #fdfcfa;
   color: var(--color-text);
   width: 100%;
 }
 
 input:focus {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
@@ -86,13 +109,17 @@ input:focus {
   flex-direction: row;
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
   color: var(--color-text);
+  font-size: 0.95rem;
 }
 
 .checkbox-label input {
   width: auto;
+  accent-color: var(--color-primary);
 }
 
 .preview-portada {
@@ -100,28 +127,29 @@ input:focus {
   width: 100%;
   max-height: 220px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .btn-primary {
-  margin-top: 20px;
-  padding: 14px;
+  margin-top: 24px;
+  padding: 15px;
   font-size: 1rem;
   font-weight: 600;
-  color: white;
+  color: #f2ede1;
   background-color: var(--color-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .btn-primary:active {
   background-color: var(--color-primary-dark);
 }
 
-.lista-section h2 {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .lista-libros {
@@ -130,30 +158,31 @@ input:focus {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .libro-item {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   background-color: var(--color-card);
   border-radius: var(--radius);
-  padding: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 14px;
+  box-shadow: 0 2px 10px rgba(36, 61, 46, 0.08);
   align-items: center;
   position: relative;
 }
 
 .libro-portada {
   flex-shrink: 0;
-  width: 60px;
-  height: 84px;
-  border-radius: 6px;
+  width: 58px;
+  height: 87px;
+  border-radius: 8px;
   overflow: hidden;
   background-color: var(--color-bg);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .libro-portada img {
@@ -163,7 +192,7 @@ input:focus {
 }
 
 .libro-portada-placeholder {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
 }
 
 .libro-info {
@@ -173,27 +202,38 @@ input:focus {
 
 .libro-titulo {
   margin: 0;
-  font-size: 1rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.05rem;
   line-height: 1.3;
 }
 
 .libro-autor {
-  margin: 2px 0;
+  margin: 3px 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
 }
 
 .libro-fechas {
-  margin: 2px 0;
-  font-size: 0.78rem;
+  margin: 3px 0;
+  font-size: 0.76rem;
   color: var(--color-text-muted);
 }
 
 .libro-dias {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  font-weight: 600;
+  display: inline-block;
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--color-primary);
+  background-color: rgba(36, 61, 46, 0.08);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.libro-dias--en-curso {
+  color: var(--color-accent);
+  background-color: rgba(184, 121, 47, 0.12);
 }
 
 .btn-eliminar {
@@ -210,5 +250,5 @@ input:focus {
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.9rem;
-  margin-top: 20px;
+  margin-top: 24px;
 }
