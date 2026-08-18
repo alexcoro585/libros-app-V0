@@ -1,9 +1,10 @@
 /**
- * Service worker mínimo: cachea los archivos estáticos para que la app
- * cargue rápido y funcione offline en su V0 (sin datos remotos).
+ * Service worker mínimo: intenta siempre red primero (para no quedarse
+ * nunca en una version vieja del codigo tras un despliegue nuevo) y usa
+ * el cache solo como respaldo cuando no hay conexion.
  */
 
-const CACHE_NAME = 'libros-app-v1';
+const CACHE_NAME = 'libros-app-v2';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
@@ -37,8 +38,12 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((respuestaCache) => {
-      return respuestaCache || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((respuestaRed) => {
+        const copia = respuestaRed.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+        return respuestaRed;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
