@@ -42,15 +42,40 @@ async function getLibros() {
 }
 
 /**
+ * Redimensiona y comprime una imagen antes de subirla, para no gastar
+ * espacio de más: en la lista solo se muestra como una miniatura, así
+ * que no hace falta la resolución original de la foto del móvil.
+ * @param {File} file
+ * @param {number} maxLado - tamaño máximo (px) del lado más largo
+ * @returns {Promise<Blob>}
+ */
+async function comprimirImagen(file, maxLado = 800) {
+  const bitmap = await createImageBitmap(file);
+  const escala = Math.min(1, maxLado / Math.max(bitmap.width, bitmap.height));
+  const ancho = Math.round(bitmap.width * escala);
+  const alto = Math.round(bitmap.height * escala);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = ancho;
+  canvas.height = alto;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, ancho, alto);
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.8);
+  });
+}
+
+/**
  * Sube la portada al bucket `libros-portadas` y devuelve su URL pública.
  * @param {File} file
  * @returns {Promise<string|null>}
  */
 async function subirPortada(file) {
-  const nombreArchivo = `${crypto.randomUUID()}-${file.name}`;
+  const imagenComprimida = await comprimirImagen(file);
+  const nombreArchivo = `${crypto.randomUUID()}.jpg`;
   const { error } = await supabaseClient.storage
     .from('libros-portadas')
-    .upload(nombreArchivo, file);
+    .upload(nombreArchivo, imagenComprimida, { contentType: 'image/jpeg' });
 
   if (error) {
     console.error('Error al subir la portada:', error);

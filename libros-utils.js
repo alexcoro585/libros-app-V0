@@ -4,8 +4,19 @@
  * en curso, y registro del service worker.
  */
 
+/**
+ * Convierte una fecha a texto YYYY-MM-DD usando la zona horaria local
+ * (a diferencia de toISOString(), que usa UTC y puede desplazar el día).
+ */
+function fechaALocalISO(date) {
+  const anio = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return fechaALocalISO(new Date());
 }
 
 function diffDias(fechaA, fechaB) {

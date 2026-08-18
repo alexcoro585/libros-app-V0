@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Historial · Libros App</title>
+  <title>Calendario · Libros App</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -20,29 +20,37 @@
 <body>
 
   <header class="app-header">
-    <h1>Historial</h1>
+    <h1>Calendario</h1>
     <p class="app-header-contador" id="contador-libros"></p>
     <nav class="app-nav">
       <a class="app-nav-link" href="index.html">Añadir</a>
-      <a class="app-nav-link app-nav-link--activo" href="historial.html">Historial</a>
-      <a class="app-nav-link" href="calendario.html">Calendario</a>
+      <a class="app-nav-link" href="historial.html">Historial</a>
+      <a class="app-nav-link app-nav-link--activo" href="calendario.html">Calendario</a>
     </nav>
   </header>
 
   <main>
-    <section class="lista-section">
-      <div class="lista-section-header">
-        <h2>Historial de lectura</h2>
-        <select id="filtro-anio" class="filtro-anio"></select>
+    <section class="card calendario-card">
+      <div class="calendario-nav">
+        <button type="button" id="mes-anterior" class="btn-mes" aria-label="Mes anterior">‹</button>
+        <h2 id="calendario-titulo"></h2>
+        <button type="button" id="mes-siguiente" class="btn-mes" aria-label="Mes siguiente">›</button>
       </div>
-      <ul id="lista-libros" class="lista-libros"></ul>
-      <p id="lista-vacia" class="lista-vacia" hidden></p>
+
+      <div class="calendario-dias-semana">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div id="calendario-grid" class="calendario-grid"></div>
+
+      <div id="calendario-detalle" class="calendario-detalle" hidden></div>
+
+      <div id="calendario-leyenda" class="calendario-leyenda"></div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="storage.js"></script>
   <script src="libros-utils.js"></script>
-  <script src="historial.js"></script>
+  <script src="calendario.js"></script>
 </body>
 </html>
