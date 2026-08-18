@@ -14,6 +14,13 @@ const btnSubmit = form.querySelector('.btn-primary');
 
 let portadaFile = null;
 
+function hoyISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Al abrir la app, lo normal es haber terminado el libro hoy mismo.
+inputFechaFin.value = hoyISO();
+
 // Guardamos el archivo real (se sube a Supabase Storage al enviar el
 // formulario) y mostramos una vista previa local mientras tanto.
 inputPortada.addEventListener('change', () => {
@@ -47,6 +54,7 @@ form.addEventListener('submit', async (event) => {
     await saveLibro({ titulo, autor, fechaFin, portadaFile });
 
     form.reset();
+    inputFechaFin.value = hoyISO();
     portadaFile = null;
     previewPortada.hidden = true;
 
@@ -124,7 +132,9 @@ async function renderLibros() {
   const librosConRangos = calcularRangosLectura(librosAsc);
   const librosDesc = librosConRangos.slice().reverse();
 
-  contadorLibros.textContent = `${librosAsc.length} libro${librosAsc.length === 1 ? '' : 's'} en tu historial`;
+  const anioActual = new Date().getFullYear();
+  const librosDelAnio = librosAsc.filter((libro) => libro.fechaFin.startsWith(String(anioActual)));
+  contadorLibros.textContent = `${librosDelAnio.length} libro${librosDelAnio.length === 1 ? '' : 's'} en ${anioActual}`;
 
   listaLibros.innerHTML = '';
 
