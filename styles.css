@@ -105,6 +105,12 @@ main {
   margin-bottom: 0;
 }
 
+.total-periodo {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: 0 0 14px;
+}
+
 .filtro-anio {
   font-size: 0.85rem;
   padding: 8px 10px;
@@ -306,7 +312,11 @@ input:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 4px;
+}
+
+.calendario-card .total-periodo {
+  text-align: center;
 }
 
 .calendario-nav h2 {

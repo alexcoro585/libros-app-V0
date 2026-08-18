@@ -6,6 +6,7 @@
 const listaLibros = document.getElementById('lista-libros');
 const listaVacia = document.getElementById('lista-vacia');
 const filtroAnio = document.getElementById('filtro-anio');
+const totalPeriodo = document.getElementById('total-periodo');
 
 let todosLosLibros = []; // ascendente por fecha de fin, con rangos ya calculados
 
@@ -59,6 +60,10 @@ function renderLista() {
     : todosLosLibros.filter((libro) => libro.fechaFin.startsWith(anioSeleccionado));
 
   const librosDesc = librosFiltrados.slice().reverse();
+
+  totalPeriodo.textContent = anioSeleccionado === 'todos'
+    ? `${librosFiltrados.length} libro${librosFiltrados.length === 1 ? '' : 's'} en total`
+    : `${librosFiltrados.length} libro${librosFiltrados.length === 1 ? '' : 's'} en ${anioSeleccionado}`;
 
   listaLibros.innerHTML = '';
 

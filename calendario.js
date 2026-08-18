@@ -25,6 +25,7 @@ const vistaMensual = document.getElementById('vista-mensual');
 const gridCalendario = document.getElementById('calendario-grid');
 const detalleCalendario = document.getElementById('calendario-detalle');
 const leyendaCalendario = document.getElementById('calendario-leyenda');
+const totalPeriodo = document.getElementById('total-periodo');
 
 let librosConRangos = [];
 let mapaDias = new Map(); // fechaISO -> índice en librosConRangos
@@ -66,6 +67,18 @@ function indicesEnRango(fechaInicioISO, fechaFinISO) {
     }
   }
   return indices;
+}
+
+/**
+ * Cuenta libros terminados dentro del rango (mismo criterio que el
+ * contador de la cabecera y el historial), a diferencia de
+ * indicesEnRango, que cuenta tambien libros que solo se solapan con
+ * el rango sin haber terminado en el.
+ */
+function contarTerminadosEnRango(fechaInicioISO, fechaFinISO) {
+  return librosConRangos.filter(
+    (libro) => libro.fechaFin >= fechaInicioISO && libro.fechaFin <= fechaFinISO
+  ).length;
 }
 
 function renderLeyenda(indices) {
@@ -165,6 +178,8 @@ function renderVistaAnual() {
     vistaAnual.appendChild(crearMiniMes(anioVisible, mes));
   }
 
+  const totalAnio = contarTerminadosEnRango(`${anioVisible}-01-01`, `${anioVisible}-12-31`);
+  totalPeriodo.textContent = `${totalAnio} libro${totalAnio === 1 ? '' : 's'} en ${anioVisible}`;
   renderLeyenda(indicesEnRango(`${anioVisible}-01-01`, `${anioVisible}-12-31`));
 }
 
@@ -211,6 +226,8 @@ function renderVistaMensual() {
 
   const ultimoDiaISO = fechaALocalISO(ultimoDiaMes);
   const primerDiaISO = fechaALocalISO(primerDiaMes);
+  const totalMes = contarTerminadosEnRango(primerDiaISO, ultimoDiaISO);
+  totalPeriodo.textContent = `${totalMes} libro${totalMes === 1 ? '' : 's'} terminado${totalMes === 1 ? '' : 's'} este mes`;
   renderLeyenda(indicesEnRango(primerDiaISO, ultimoDiaISO));
 }
 
