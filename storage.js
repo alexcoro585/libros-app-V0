@@ -25,15 +25,14 @@ function mapRowToLibro(row) {
 
 /**
  * Devuelve todos los libros guardados, ordenados por fecha de fin
- * ascendente (el más antiguo primero). El libro en curso (sin fecha
- * de fin) queda siempre al final, por ser el más reciente.
+ * ascendente (el más antiguo primero).
  * @returns {Promise<Array<Object>>}
  */
 async function getLibros() {
   const { data, error } = await supabaseClient
     .from('libros')
     .select('*')
-    .order('fecha_fin', { ascending: true, nullsFirst: false });
+    .order('fecha_fin', { ascending: true });
 
   if (error) {
     console.error('Error al obtener los libros:', error);

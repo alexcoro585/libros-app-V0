@@ -231,11 +231,6 @@ input:focus {
   border-radius: 999px;
 }
 
-.libro-dias--en-curso {
-  color: var(--color-accent);
-  background-color: rgba(184, 121, 47, 0.12);
-}
-
 .btn-eliminar {
   background: none;
   border: none;
