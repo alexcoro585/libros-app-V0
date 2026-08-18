@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Historial · Libros App</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2f6f4f">
+
+  <!-- iOS: modo standalone a pantalla completa -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Libros">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>Historial</h1>
+    <p class="app-header-contador" id="contador-libros"></p>
+    <a class="app-header-link" href="index.html">← Añadir libro</a>
+  </header>
+
+  <main>
+    <section class="lista-section">
+      <div class="lista-section-header">
+        <h2>Historial de lectura</h2>
+        <select id="filtro-anio" class="filtro-anio"></select>
+      </div>
+      <ul id="lista-libros" class="lista-libros"></ul>
+      <p id="lista-vacia" class="lista-vacia" hidden></p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="storage.js"></script>
+  <script src="libros-utils.js"></script>
+  <script src="historial.js"></script>
+</body>
+</html>

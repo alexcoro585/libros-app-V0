@@ -1,22 +1,16 @@
 /**
- * Lógica de interfaz: formulario, listado, previsualización de portada.
- * No accede a Supabase directamente, usa las funciones de storage.js.
+ * Lógica de la portada: formulario de añadir libro y previsualización
+ * de portada. No accede a Supabase directamente, usa storage.js.
+ * El listado completo vive en historial.js / historial.html.
  */
 
 const form = document.getElementById('form-libro');
 const inputFechaFin = document.getElementById('fechaFin');
 const inputPortada = document.getElementById('portada');
 const previewPortada = document.getElementById('preview-portada');
-const listaLibros = document.getElementById('lista-libros');
-const listaVacia = document.getElementById('lista-vacia');
-const contadorLibros = document.getElementById('contador-libros');
 const btnSubmit = form.querySelector('.btn-primary');
 
 let portadaFile = null;
-
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // Al abrir la app, lo normal es haber terminado el libro hoy mismo.
 inputFechaFin.value = hoyISO();
@@ -58,112 +52,16 @@ form.addEventListener('submit', async (event) => {
     portadaFile = null;
     previewPortada.hidden = true;
 
-    await renderLibros();
+    await actualizarContador();
+
+    btnSubmit.textContent = '¡Guardado! ✓';
+    setTimeout(() => {
+      btnSubmit.textContent = 'Añadir libro';
+    }, 1200);
   } catch (error) {
     alert('No se pudo guardar el libro. Revisa tu conexión e inténtalo de nuevo.');
+    btnSubmit.textContent = 'Añadir libro';
   } finally {
     btnSubmit.disabled = false;
-    btnSubmit.textContent = 'Añadir libro';
   }
 });
-
-function diffDias(fechaA, fechaB) {
-  const diffMs = new Date(fechaB) - new Date(fechaA);
-  return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
-}
-
-function formatearFecha(fechaISO) {
-  const [anio, mes, dia] = fechaISO.split('-');
-  return `${dia}/${mes}/${anio}`;
-}
-
-/**
- * Añade a cada libro su fecha de inicio calculada (el fin del libro
- * anterior) y los días que tardó en leerlo. `libros` debe venir
- * ordenado por fecha de fin ascendente.
- */
-function calcularRangosLectura(libros) {
-  let fechaFinAnterior = null;
-
-  return libros.map((libro) => {
-    const fechaInicioCalculada = fechaFinAnterior;
-    const dias = fechaInicioCalculada ? diffDias(fechaInicioCalculada, libro.fechaFin) : null;
-    fechaFinAnterior = libro.fechaFin;
-    return { ...libro, fechaInicioCalculada, dias };
-  });
-}
-
-function crearElementoLibro(libro) {
-  const li = document.createElement('li');
-  li.className = 'libro-item';
-
-  const estadoLectura = libro.dias !== null
-    ? `${libro.dias} día${libro.dias === 1 ? '' : 's'}`
-    : `Terminado el ${formatearFecha(libro.fechaFin)}`;
-
-  const rangoFechas = libro.fechaInicioCalculada
-    ? `${formatearFecha(libro.fechaInicioCalculada)} → ${formatearFecha(libro.fechaFin)}`
-    : '';
-
-  const portadaSrc = libro.portada || '';
-
-  li.innerHTML = `
-    <div class="libro-portada">
-      ${
-        portadaSrc
-          ? `<img src="${portadaSrc}" alt="Portada de ${libro.titulo}">`
-          : `<div class="libro-portada-placeholder">📖</div>`
-      }
-    </div>
-    <div class="libro-info">
-      <h3 class="libro-titulo">${libro.titulo}</h3>
-      <p class="libro-autor">${libro.autor}</p>
-      ${rangoFechas ? `<p class="libro-fechas">${rangoFechas}</p>` : ''}
-      <p class="libro-dias">${estadoLectura}</p>
-    </div>
-    <button class="btn-eliminar" data-id="${libro.id}" aria-label="Eliminar libro">✕</button>
-  `;
-
-  return li;
-}
-
-async function renderLibros() {
-  const librosAsc = await getLibros();
-  const librosConRangos = calcularRangosLectura(librosAsc);
-  const librosDesc = librosConRangos.slice().reverse();
-
-  const anioActual = new Date().getFullYear();
-  const librosDelAnio = librosAsc.filter((libro) => libro.fechaFin.startsWith(String(anioActual)));
-  contadorLibros.textContent = `${librosDelAnio.length} libro${librosDelAnio.length === 1 ? '' : 's'} en ${anioActual}`;
-
-  listaLibros.innerHTML = '';
-
-  if (librosDesc.length === 0) {
-    listaVacia.hidden = false;
-    return;
-  }
-
-  listaVacia.hidden = true;
-  librosDesc.forEach((libro) => {
-    listaLibros.appendChild(crearElementoLibro(libro));
-  });
-}
-
-listaLibros.addEventListener('click', async (event) => {
-  const boton = event.target.closest('.btn-eliminar');
-  if (!boton) return;
-
-  await deleteLibro(boton.dataset.id);
-  await renderLibros();
-});
-
-// Registro del service worker para funcionalidad PWA.
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch((err) => {
-      console.error('Error registrando el service worker:', err);
-    });
-  });
-}
-
-renderLibros();

@@ -49,6 +49,15 @@ body {
   color: #d8cfba;
 }
 
+.app-header-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #f2ede1;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(242, 237, 225, 0.5);
+}
+
 main {
   max-width: 480px;
   margin: 0 auto;
@@ -70,6 +79,27 @@ main {
   font-weight: 400;
   font-size: 1.25rem;
   color: var(--color-primary);
+}
+
+.lista-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lista-section-header h2 {
+  margin-bottom: 0;
+}
+
+.filtro-anio {
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-card);
+  color: var(--color-text);
 }
 
 form {
