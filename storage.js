@@ -1,49 +1,98 @@
 /**
  * Capa de datos de la app.
- * V0: todo se guarda en localStorage.
- * Más adelante, para migrar a Supabase, solo hay que reescribir el
- * contenido de estas funciones (getLibros, saveLibro, deleteLibro...),
- * el resto de la app (app.js) no debería necesitar cambios.
+ * Guarda los libros en Supabase (tabla `libros`) y las portadas en
+ * Supabase Storage (bucket `libros-portadas`). El resto de la app (app.js)
+ * solo conoce estas funciones, no sabe nada de Supabase.
  */
 
-const STORAGE_KEY = 'libros-app:libros';
+const SUPABASE_URL = 'https://jddklucqhsoqntrnrkbq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_q0RUn8VkBG4F7j7InGhsGw_SczAuE7h';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function mapRowToLibro(row) {
+  return {
+    id: row.id,
+    titulo: row.titulo,
+    autor: row.autor,
+    fechaInicio: row.fecha_inicio,
+    fechaFin: row.fecha_fin,
+    portada: row.portada_url,
+  };
+}
 
 /**
  * Devuelve todos los libros guardados, ordenados por fecha de inicio
  * descendente (el más reciente primero).
- * @returns {Array<Object>}
+ * @returns {Promise<Array<Object>>}
  */
-function getLibros() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  const libros = raw ? JSON.parse(raw) : [];
-  return libros.sort((a, b) => b.fechaInicio.localeCompare(a.fechaInicio));
+async function getLibros() {
+  const { data, error } = await supabaseClient
+    .from('libros')
+    .select('*')
+    .order('fecha_inicio', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener los libros:', error);
+    return [];
+  }
+  return data.map(mapRowToLibro);
+}
+
+/**
+ * Sube la portada al bucket `libros-portadas` y devuelve su URL pública.
+ * @param {File} file
+ * @returns {Promise<string|null>}
+ */
+async function subirPortada(file) {
+  const nombreArchivo = `${crypto.randomUUID()}-${file.name}`;
+  const { error } = await supabaseClient.storage
+    .from('libros-portadas')
+    .upload(nombreArchivo, file);
+
+  if (error) {
+    console.error('Error al subir la portada:', error);
+    return null;
+  }
+
+  const { data } = supabaseClient.storage.from('libros-portadas').getPublicUrl(nombreArchivo);
+  return data.publicUrl;
 }
 
 /**
  * Guarda un libro nuevo.
- * @param {Object} libro - { titulo, autor, fechaInicio, fechaFin, portada }
- * @returns {Object} el libro guardado, con su id generado
+ * @param {Object} libro - { titulo, autor, fechaInicio, fechaFin, portadaFile }
+ * @returns {Promise<Object>} el libro guardado, con su id generado
  */
-function saveLibro(libro) {
-  const libros = getLibros();
-  const nuevoLibro = {
-    id: crypto.randomUUID(),
-    titulo: libro.titulo,
-    autor: libro.autor,
-    fechaInicio: libro.fechaInicio,
-    fechaFin: libro.fechaFin || null,
-    portada: libro.portada || null,
-  };
-  libros.push(nuevoLibro);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(libros));
-  return nuevoLibro;
+async function saveLibro(libro) {
+  const portadaUrl = libro.portadaFile ? await subirPortada(libro.portadaFile) : null;
+
+  const { data, error } = await supabaseClient
+    .from('libros')
+    .insert({
+      titulo: libro.titulo,
+      autor: libro.autor,
+      fecha_inicio: libro.fechaInicio,
+      fecha_fin: libro.fechaFin || null,
+      portada_url: portadaUrl,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error al guardar el libro:', error);
+    throw error;
+  }
+  return mapRowToLibro(data);
 }
 
 /**
  * Elimina un libro por su id.
  * @param {string} id
  */
-function deleteLibro(id) {
-  const libros = getLibros().filter((libro) => libro.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(libros));
+async function deleteLibro(id) {
+  const { error } = await supabaseClient.from('libros').delete().eq('id', id);
+  if (error) {
+    console.error('Error al eliminar el libro:', error);
+  }
 }

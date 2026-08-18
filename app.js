@@ -1,6 +1,6 @@
 /**
  * Lógica de interfaz: formulario, listado, previsualización de portada.
- * No accede a localStorage directamente, usa las funciones de storage.js.
+ * No accede a Supabase directamente, usa las funciones de storage.js.
  */
 
 const form = document.getElementById('form-libro');
@@ -10,8 +10,9 @@ const inputPortada = document.getElementById('portada');
 const previewPortada = document.getElementById('preview-portada');
 const listaLibros = document.getElementById('lista-libros');
 const listaVacia = document.getElementById('lista-vacia');
+const btnSubmit = form.querySelector('.btn-primary');
 
-let portadaBase64 = null;
+let portadaFile = null;
 
 // Si el usuario marca "en curso", deshabilitamos la fecha de fin.
 checkboxEnCurso.addEventListener('change', () => {
@@ -21,26 +22,26 @@ checkboxEnCurso.addEventListener('change', () => {
   }
 });
 
-// Convertimos la foto a base64 para poder guardarla en localStorage
-// y mostramos una vista previa.
+// Guardamos el archivo real (se sube a Supabase Storage al enviar el
+// formulario) y mostramos una vista previa local mientras tanto.
 inputPortada.addEventListener('change', () => {
   const file = inputPortada.files[0];
+  portadaFile = file || null;
+
   if (!file) {
-    portadaBase64 = null;
     previewPortada.hidden = true;
     return;
   }
 
   const reader = new FileReader();
   reader.onload = () => {
-    portadaBase64 = reader.result;
-    previewPortada.src = portadaBase64;
+    previewPortada.src = reader.result;
     previewPortada.hidden = false;
   };
   reader.readAsDataURL(file);
 });
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const titulo = document.getElementById('titulo').value.trim();
@@ -48,20 +49,30 @@ form.addEventListener('submit', (event) => {
   const fechaInicio = document.getElementById('fechaInicio').value;
   const fechaFin = checkboxEnCurso.checked ? null : (inputFechaFin.value || null);
 
-  saveLibro({
-    titulo,
-    autor,
-    fechaInicio,
-    fechaFin,
-    portada: portadaBase64,
-  });
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = 'Guardando...';
 
-  form.reset();
-  portadaBase64 = null;
-  previewPortada.hidden = true;
-  inputFechaFin.disabled = false;
+  try {
+    await saveLibro({
+      titulo,
+      autor,
+      fechaInicio,
+      fechaFin,
+      portadaFile,
+    });
 
-  renderLibros();
+    form.reset();
+    portadaFile = null;
+    previewPortada.hidden = true;
+    inputFechaFin.disabled = false;
+
+    await renderLibros();
+  } catch (error) {
+    alert('No se pudo guardar el libro. Revisa tu conexión e inténtalo de nuevo.');
+  } finally {
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Añadir libro';
+  }
 });
 
 /**
@@ -112,8 +123,8 @@ function crearElementoLibro(libro) {
   return li;
 }
 
-function renderLibros() {
-  const libros = getLibros();
+async function renderLibros() {
+  const libros = await getLibros();
   listaLibros.innerHTML = '';
 
   if (libros.length === 0) {
@@ -127,12 +138,12 @@ function renderLibros() {
   });
 }
 
-listaLibros.addEventListener('click', (event) => {
+listaLibros.addEventListener('click', async (event) => {
   const boton = event.target.closest('.btn-eliminar');
   if (!boton) return;
 
-  deleteLibro(boton.dataset.id);
-  renderLibros();
+  await deleteLibro(boton.dataset.id);
+  await renderLibros();
 });
 
 // Registro del service worker para funcionalidad PWA.
