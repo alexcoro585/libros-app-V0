@@ -178,6 +178,13 @@ input:focus {
   accent-color: var(--color-primary);
 }
 
+.estado-lectura-ia {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  font-style: italic;
+}
+
 .preview-portada {
   margin-top: 10px;
   width: 100%;
@@ -287,14 +294,71 @@ input:focus {
   border-radius: 999px;
 }
 
-.btn-eliminar {
+.libro-acciones {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+.btn-eliminar,
+.btn-editar {
   background: none;
   border: none;
   color: var(--color-text-muted);
   font-size: 1.1rem;
   cursor: pointer;
   padding: 6px;
-  align-self: flex-start;
+}
+
+.form-edicion {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 2px;
+}
+
+.form-edicion label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.form-edicion input {
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: #fdfcfa;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-edicion-botones {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.form-edicion-botones button {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-guardar-edicion {
+  background-color: var(--color-primary);
+  color: #fdfcfa;
+}
+
+.btn-cancelar-edicion {
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
 }
 
 .lista-vacia {

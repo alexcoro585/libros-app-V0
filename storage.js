@@ -20,6 +20,7 @@ function mapRowToLibro(row) {
     autor: row.autor,
     fechaFin: row.fecha_fin,
     portada: row.portada_url,
+    esImportado: row.es_importado,
   };
 }
 
@@ -120,5 +121,28 @@ async function deleteLibro(id) {
   const { error } = await supabaseClient.from('libros').delete().eq('id', id);
   if (error) {
     console.error('Error al eliminar el libro:', error);
+  }
+}
+
+/**
+ * Actualiza titulo, autor y/o fecha de fin de un libro ya existente.
+ * Los libros del historial importado (esImportado) no se editan desde
+ * la app.
+ * @param {string} id
+ * @param {Object} cambios - { titulo, autor, fechaFin }
+ */
+async function updateLibro(id, cambios) {
+  const { error } = await supabaseClient
+    .from('libros')
+    .update({
+      titulo: cambios.titulo,
+      autor: cambios.autor,
+      fecha_fin: cambios.fechaFin,
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error al actualizar el libro:', error);
+    throw error;
   }
 }

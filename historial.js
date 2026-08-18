@@ -22,6 +22,7 @@ function poblarFiltroAnios(libros) {
 function crearElementoLibro(libro) {
   const li = document.createElement('li');
   li.className = 'libro-item';
+  li.dataset.id = libro.id;
 
   const estadoLectura = libro.dias !== null
     ? `${libro.dias} día${libro.dias === 1 ? '' : 's'}`
@@ -47,10 +48,31 @@ function crearElementoLibro(libro) {
       ${rangoFechas ? `<p class="libro-fechas">${rangoFechas}</p>` : ''}
       <p class="libro-dias">${estadoLectura}</p>
     </div>
-    <button class="btn-eliminar" data-id="${libro.id}" aria-label="Eliminar libro">✕</button>
+    <div class="libro-acciones">
+      ${libro.esImportado ? '' : `<button class="btn-editar" data-id="${libro.id}" aria-label="Editar libro">✎</button>`}
+      <button class="btn-eliminar" data-id="${libro.id}" aria-label="Eliminar libro">✕</button>
+    </div>
   `;
 
   return li;
+}
+
+function crearFormularioEdicion(libro) {
+  const div = document.createElement('div');
+  div.className = 'form-edicion';
+  div.innerHTML = `
+    <label>Título</label>
+    <input type="text" class="input-editar-titulo" value="${libro.titulo}">
+    <label>Autor</label>
+    <input type="text" class="input-editar-autor" value="${libro.autor}">
+    <label>Fecha en la que lo terminaste</label>
+    <input type="date" class="input-editar-fecha" value="${libro.fechaFin}">
+    <div class="form-edicion-botones">
+      <button type="button" class="btn-guardar-edicion">Guardar</button>
+      <button type="button" class="btn-cancelar-edicion">Cancelar</button>
+    </div>
+  `;
+  return div;
 }
 
 function renderLista() {
@@ -91,12 +113,48 @@ async function cargarHistorial() {
 filtroAnio.addEventListener('change', renderLista);
 
 listaLibros.addEventListener('click', async (event) => {
-  const boton = event.target.closest('.btn-eliminar');
-  if (!boton) return;
+  const botonEliminar = event.target.closest('.btn-eliminar');
+  if (botonEliminar) {
+    await deleteLibro(botonEliminar.dataset.id);
+    await cargarHistorial();
+    await actualizarContador();
+    return;
+  }
 
-  await deleteLibro(boton.dataset.id);
-  await cargarHistorial();
-  await actualizarContador();
+  const botonEditar = event.target.closest('.btn-editar');
+  if (botonEditar) {
+    const li = botonEditar.closest('.libro-item');
+    const libro = todosLosLibros.find((l) => l.id === botonEditar.dataset.id);
+    const infoOriginal = li.innerHTML;
+    li.innerHTML = '';
+    li.appendChild(crearFormularioEdicion(libro));
+    li.dataset.infoOriginal = infoOriginal;
+    return;
+  }
+
+  const botonCancelar = event.target.closest('.btn-cancelar-edicion');
+  if (botonCancelar) {
+    const li = botonCancelar.closest('.libro-item');
+    li.innerHTML = li.dataset.infoOriginal;
+    return;
+  }
+
+  const botonGuardar = event.target.closest('.btn-guardar-edicion');
+  if (botonGuardar) {
+    const li = botonGuardar.closest('.libro-item');
+    const titulo = li.querySelector('.input-editar-titulo').value.trim();
+    const autor = li.querySelector('.input-editar-autor').value.trim();
+    const fechaFin = li.querySelector('.input-editar-fecha').value;
+
+    if (!titulo || !autor || !fechaFin) {
+      alert('Rellena título, autor y fecha antes de guardar.');
+      return;
+    }
+
+    await updateLibro(li.dataset.id, { titulo, autor, fechaFin });
+    await cargarHistorial();
+    await actualizarContador();
+  }
 });
 
 cargarHistorial();
