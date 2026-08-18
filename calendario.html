@@ -31,16 +31,22 @@
 
   <main>
     <section class="card calendario-card">
+      <button type="button" id="btn-volver-anio" class="btn-volver" hidden>← Volver al año</button>
+
       <div class="calendario-nav">
-        <button type="button" id="mes-anterior" class="btn-mes" aria-label="Mes anterior">‹</button>
+        <button type="button" id="nav-anterior" class="btn-mes" aria-label="Anterior">‹</button>
         <h2 id="calendario-titulo"></h2>
-        <button type="button" id="mes-siguiente" class="btn-mes" aria-label="Mes siguiente">›</button>
+        <button type="button" id="nav-siguiente" class="btn-mes" aria-label="Siguiente">›</button>
       </div>
 
-      <div class="calendario-dias-semana">
-        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      <div id="vista-anual" class="calendario-anual"></div>
+
+      <div id="vista-mensual" hidden>
+        <div class="calendario-dias-semana">
+          <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+        <div id="calendario-grid" class="calendario-grid"></div>
       </div>
-      <div id="calendario-grid" class="calendario-grid"></div>
 
       <div id="calendario-detalle" class="calendario-detalle" hidden></div>
 

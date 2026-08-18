@@ -140,6 +140,8 @@ input[type="file"] {
   background-color: #fdfcfa;
   color: var(--color-text);
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 input:focus {
@@ -315,6 +317,53 @@ input:focus {
   line-height: 1;
   padding: 4px 12px;
   cursor: pointer;
+}
+
+.btn-volver {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.calendario-anual {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.mini-mes {
+  background-color: var(--color-bg);
+  border: none;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.mini-mes-titulo {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.mini-mes-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1.5px;
+}
+
+.mini-mes-grid span {
+  aspect-ratio: 1;
+  border-radius: 1.5px;
+  background-color: var(--color-border);
 }
 
 .calendario-dias-semana {
