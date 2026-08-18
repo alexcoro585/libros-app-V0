@@ -144,6 +144,12 @@ input[type="file"] {
   box-sizing: border-box;
 }
 
+input[type="date"] {
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 input:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
