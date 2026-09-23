@@ -13,7 +13,15 @@ const previewPortada = document.getElementById('preview-portada');
 const estadoLecturaIA = document.getElementById('estado-lectura-ia');
 const btnSubmit = form.querySelector('.btn-primary');
 
-let portadaFile = null;
+// La foto elegida, ya comprimida una sola vez y reutilizada para todo:
+// vista previa, lectura con IA y subida a Supabase.
+let portadaComprimida = null;
+// Promesa de la subida, que arranca al elegir la foto y no al guardar.
+let subidaPortada = null;
+// Cada foto elegida incrementa esto, para descartar resultados de una
+// foto anterior si el usuario cambia de imagen a mitad.
+let generacionPortada = 0;
+let urlPreview = null;
 
 // Al abrir la app, lo normal es haber terminado el libro hoy mismo.
 inputFechaFin.value = hoyISO();
@@ -51,21 +59,18 @@ function ocultarEstadoIA() {
  * de red, una funcion sin desplegar o una clave sin configurar dejaban
  * el formulario vacio sin ninguna explicacion.
  */
-async function intentarLeerPortada(file) {
+async function intentarLeerPortada(comprimida, generacion) {
   if (inputTitulo.value.trim() || inputAutor.value.trim()) {
     mostrarEstadoIA('Titulo y autor ya escritos: no se lee la portada. Vacialos y vuelve a elegir la foto si quieres que los lea.');
     return;
   }
 
-  mostrarEstadoIA('Leyendo portada...');
-
   let imagenBase64;
   try {
-    const comprimida = await comprimirImagen(file, 800);
     imagenBase64 = await blobABase64(comprimida);
   } catch (error) {
     console.error('No se pudo preparar la imagen para leerla:', error);
-    mostrarEstadoIA('No se pudo procesar la foto (¿formato raro, tipo HEIC?). Escribe titulo y autor a mano.', 'error');
+    mostrarEstadoIA('No se pudo procesar la foto. Escribe titulo y autor a mano.', 'error');
     return;
   }
 
@@ -106,17 +111,31 @@ async function intentarLeerPortada(file) {
     return;
   }
 
+  if (generacion !== generacionPortada) return; // el usuario cambio de foto
+
   if (datos.titulo) inputTitulo.value = datos.titulo;
   if (datos.autor) inputAutor.value = datos.autor;
   mostrarEstadoIA('Rellenado automaticamente, revisa que este bien.');
 }
 
-// Guardamos el archivo real (se sube a Supabase Storage al enviar el
-// formulario), mostramos una vista previa local, e intentamos rellenar
-// título/autor automáticamente leyendo la portada.
-inputPortada.addEventListener('change', () => {
+/**
+ * Al elegir una foto hacemos, en este orden y sin bloquear nada:
+ *   1. vista previa inmediata con createObjectURL (no leemos la foto
+ *      entera a base64 solo para enseñarla),
+ *   2. una unica compresion, que antes se hacia dos veces: una para la
+ *      IA y otra al subirla,
+ *   3. subida a Supabase en segundo plano, para que al darle a Guardar
+ *      no haya que esperar a nada,
+ *   4. lectura con IA, que es lo lento y ocurre mientras el usuario
+ *      rellena la fecha.
+ */
+inputPortada.addEventListener('change', async () => {
   const file = inputPortada.files[0];
-  portadaFile = file || null;
+  const generacion = ++generacionPortada;
+
+  if (urlPreview) URL.revokeObjectURL(urlPreview);
+  portadaComprimida = null;
+  subidaPortada = null;
 
   if (!file) {
     previewPortada.hidden = true;
@@ -124,14 +143,29 @@ inputPortada.addEventListener('change', () => {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    previewPortada.src = reader.result;
-    previewPortada.hidden = false;
-  };
-  reader.readAsDataURL(file);
+  urlPreview = URL.createObjectURL(file);
+  previewPortada.src = urlPreview;
+  previewPortada.hidden = false;
 
-  intentarLeerPortada(file);
+  mostrarEstadoIA('Leyendo portada...');
+
+  let comprimida;
+  try {
+    comprimida = await comprimirImagen(file, 800);
+  } catch (error) {
+    console.error('No se pudo procesar la foto:', error);
+    mostrarEstadoIA('No se pudo procesar la foto (¿formato raro, tipo HEIC?). Escribe titulo y autor a mano.', 'error');
+    return;
+  }
+
+  if (generacion !== generacionPortada) return; // hay una foto mas nueva
+
+  portadaComprimida = comprimida;
+  subidaPortada = subirPortada(comprimida);
+  // Si falla la subida el libro se guarda sin portada, igual que antes.
+  subidaPortada.catch(() => null);
+
+  await intentarLeerPortada(comprimida, generacion);
 });
 
 form.addEventListener('submit', async (event) => {
@@ -145,11 +179,18 @@ form.addEventListener('submit', async (event) => {
   btnSubmit.textContent = 'Guardando...';
 
   try {
-    await saveLibro({ titulo, autor, fechaFin, portadaFile });
+    // La subida arranco al elegir la foto, asi que normalmente esto ya
+    // esta resuelto y no se espera nada.
+    const portadaUrl = subidaPortada ? await subidaPortada : null;
+
+    await saveLibro({ titulo, autor, fechaFin, portadaUrl });
 
     form.reset();
     inputFechaFin.value = hoyISO();
-    portadaFile = null;
+    generacionPortada++;
+    portadaComprimida = null;
+    subidaPortada = null;
+    if (urlPreview) { URL.revokeObjectURL(urlPreview); urlPreview = null; }
     previewPortada.hidden = true;
     ocultarEstadoIA();
 

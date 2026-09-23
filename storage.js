@@ -71,12 +71,14 @@ async function comprimirImagen(file, maxLado = 800) {
 }
 
 /**
- * Sube la portada al bucket `libros-portadas` y devuelve su URL pública.
- * @param {File} file
+ * Sube una portada YA comprimida al bucket `libros-portadas` y devuelve
+ * su URL pública. Recibe el blob en vez del File original para no
+ * descomprimir dos veces la misma foto: quien llama ya la comprimio
+ * para enseñarla y para mandarsela a la IA.
+ * @param {Blob} imagenComprimida
  * @returns {Promise<string|null>}
  */
-async function subirPortada(file) {
-  const imagenComprimida = await comprimirImagen(file);
+async function subirPortada(imagenComprimida) {
   const nombreArchivo = `${crypto.randomUUID()}.jpg`;
   const { error } = await supabaseClient.storage
     .from('libros-portadas')
@@ -92,20 +94,19 @@ async function subirPortada(file) {
 }
 
 /**
- * Guarda un libro nuevo.
- * @param {Object} libro - { titulo, autor, fechaFin, portadaFile }
+ * Guarda un libro nuevo. La portada se sube aparte (en cuanto se elige
+ * la foto, no al guardar), asi que aqui llega ya como URL.
+ * @param {Object} libro - { titulo, autor, fechaFin, portadaUrl }
  * @returns {Promise<Object>} el libro guardado, con su id generado
  */
 async function saveLibro(libro) {
-  const portadaUrl = libro.portadaFile ? await subirPortada(libro.portadaFile) : null;
-
   const { data, error } = await supabaseClient
     .from('libros')
     .insert({
       titulo: libro.titulo,
       autor: libro.autor,
       fecha_fin: libro.fechaFin || null,
-      portada_url: portadaUrl,
+      portada_url: libro.portadaUrl || null,
     })
     .select()
     .single();
