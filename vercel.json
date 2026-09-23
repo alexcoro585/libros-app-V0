@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/mantener-viva",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
