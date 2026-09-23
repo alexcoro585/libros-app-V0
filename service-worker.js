@@ -4,7 +4,7 @@
  * el cache solo como respaldo cuando no hay conexion.
  */
 
-const CACHE_NAME = 'libros-app-v8';
+const CACHE_NAME = 'libros-app-v9';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',

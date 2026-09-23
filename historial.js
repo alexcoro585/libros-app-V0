@@ -104,7 +104,16 @@ function renderLista() {
 }
 
 async function cargarHistorial() {
-  const librosAsc = await getLibros();
+  let librosAsc;
+  try {
+    librosAsc = await getLibros();
+  } catch (error) {
+    listaLibros.innerHTML = '';
+    listaVacia.hidden = false;
+    listaVacia.textContent = 'No se pudo conectar con el servidor, asi que no se puede mostrar el historial. Puede que el proyecto de Supabase este pausado: reactivalo y recarga.';
+    return;
+  }
+
   todosLosLibros = calcularRangosLectura(librosAsc);
   poblarFiltroAnios(todosLosLibros);
   renderLista();

@@ -35,9 +35,13 @@ async function getLibros() {
     .select('*')
     .order('fecha_fin', { ascending: true });
 
+  // Ojo: no devolvemos [] en caso de error. Hacerlo confundia "no hay
+  // libros" con "no hay servidor" (por ejemplo con el proyecto de
+  // Supabase pausado), y la app enseñaba un historial vacio como si
+  // todo fuese bien.
   if (error) {
     console.error('Error al obtener los libros:', error);
-    return [];
+    throw error;
   }
   return data.map(mapRowToLibro);
 }

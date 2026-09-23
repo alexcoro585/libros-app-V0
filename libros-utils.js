@@ -49,7 +49,14 @@ async function actualizarContador() {
   const contadorLibros = document.getElementById('contador-libros');
   if (!contadorLibros) return;
 
-  const libros = await getLibros();
+  let libros;
+  try {
+    libros = await getLibros();
+  } catch (error) {
+    contadorLibros.textContent = 'Sin conexion con el servidor';
+    return;
+  }
+
   const anioActual = new Date().getFullYear();
   const librosDelAnio = libros.filter((libro) => libro.fechaFin.startsWith(String(anioActual)));
   contadorLibros.textContent = `${librosDelAnio.length} libro${librosDelAnio.length === 1 ? '' : 's'} en ${anioActual}`;

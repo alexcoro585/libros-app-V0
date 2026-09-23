@@ -270,7 +270,15 @@ navSiguiente.addEventListener('click', () => {
 btnVolverAnio.addEventListener('click', irAAnio);
 
 async function cargarCalendario() {
-  const librosAsc = await getLibros();
+  let librosAsc;
+  try {
+    librosAsc = await getLibros();
+  } catch (error) {
+    document.querySelector('main').insertAdjacentHTML('afterbegin',
+      '<p class="lista-vacia">No se pudo conectar con el servidor. Puede que el proyecto de Supabase este pausado: reactivalo y recarga.</p>');
+    return;
+  }
+
   librosConRangos = calcularRangosLectura(librosAsc);
   mapaDias = construirMapaDias(librosConRangos);
   render();
