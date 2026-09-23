@@ -33,7 +33,8 @@ export default async function handler(req, res) {
     }
   }
 
-  const { imagenBase64 } = cuerpo;
+  // TEMPORAL: overrides para medir variantes. Se quitan al terminar.
+  const { imagenBase64, _modelo, _thinking, _sinJson } = cuerpo;
   if (!imagenBase64) {
     res.status(400).json({ error: 'Falta la imagen' });
     return;
@@ -45,9 +46,10 @@ export default async function handler(req, res) {
     return;
   }
 
+  const t0 = Date.now();
   try {
     const respuestaGemini = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${_modelo || MODELO}:generateContent`,
       {
         method: 'POST',
         headers: {
@@ -63,7 +65,10 @@ export default async function handler(req, res) {
           }],
           // Pedimos JSON directamente en vez de confiar en que el modelo
           // no envuelva la respuesta en ```json.
-          generationConfig: { responseMimeType: 'application/json' },
+          generationConfig: {
+            ...(_sinJson ? {} : { responseMimeType: 'application/json' }),
+            ...(_thinking ? { thinkingLevel: _thinking } : {}),
+          },
         }),
       }
     );
@@ -100,6 +105,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       titulo: resultado.titulo || '',
       autor: resultado.autor || '',
+      _msGemini: Date.now() - t0,
+      _uso: datos?.usageMetadata || null,
     });
   } catch (error) {
     console.error('Error leyendo portada con Gemini:', error);
