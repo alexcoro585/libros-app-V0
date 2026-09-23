@@ -185,6 +185,11 @@ input:focus {
   font-style: italic;
 }
 
+.estado-lectura-ia--error {
+  color: #b3261e;
+  font-style: normal;
+}
+
 .preview-portada {
   margin-top: 10px;
   width: 100%;

@@ -28,36 +28,87 @@ function blobABase64(blob) {
 }
 
 /**
+ * Muestra el mensajito que hay bajo el campo de portada.
+ * `tipo` es 'info' (en curso / todo bien) o 'error' (algo ha fallado).
+ */
+function mostrarEstadoIA(texto, tipo = 'info') {
+  estadoLecturaIA.hidden = false;
+  estadoLecturaIA.textContent = texto;
+  estadoLecturaIA.classList.toggle('estado-lectura-ia--error', tipo === 'error');
+}
+
+function ocultarEstadoIA() {
+  estadoLecturaIA.hidden = true;
+  estadoLecturaIA.classList.remove('estado-lectura-ia--error');
+}
+
+/**
  * Le pide a la funcion de servidor (que a su vez usa Gemini) que lea el
  * titulo y el autor de la portada, y rellena el formulario si esos
- * campos siguen vacios. Si algo falla, no pasa nada: se rellenan a mano.
+ * campos siguen vacios.
+ *
+ * Si algo falla se dice en pantalla en vez de callarselo: antes un fallo
+ * de red, una funcion sin desplegar o una clave sin configurar dejaban
+ * el formulario vacio sin ninguna explicacion.
  */
 async function intentarLeerPortada(file) {
-  if (inputTitulo.value.trim() || inputAutor.value.trim()) return;
+  if (inputTitulo.value.trim() || inputAutor.value.trim()) {
+    mostrarEstadoIA('Titulo y autor ya escritos: no se lee la portada. Vacialos y vuelve a elegir la foto si quieres que los lea.');
+    return;
+  }
 
-  estadoLecturaIA.hidden = false;
-  estadoLecturaIA.textContent = 'Leyendo portada...';
+  mostrarEstadoIA('Leyendo portada...');
 
+  let imagenBase64;
   try {
     const comprimida = await comprimirImagen(file, 800);
-    const imagenBase64 = await blobABase64(comprimida);
+    imagenBase64 = await blobABase64(comprimida);
+  } catch (error) {
+    console.error('No se pudo preparar la imagen para leerla:', error);
+    mostrarEstadoIA('No se pudo procesar la foto (¿formato raro, tipo HEIC?). Escribe titulo y autor a mano.', 'error');
+    return;
+  }
 
-    const respuesta = await fetch('/api/leer-portada', {
+  let respuesta;
+  try {
+    respuesta = await fetch('/api/leer-portada', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imagenBase64 }),
     });
-    const datos = await respuesta.json();
-
-    if (datos.titulo) inputTitulo.value = datos.titulo;
-    if (datos.autor) inputAutor.value = datos.autor;
-
-    estadoLecturaIA.hidden = !(datos.titulo || datos.autor);
-    estadoLecturaIA.textContent = 'Rellenado automáticamente, revisa que esté bien.';
   } catch (error) {
-    console.error('No se pudo leer la portada automáticamente:', error);
-    estadoLecturaIA.hidden = true;
+    console.error('No se pudo contactar con /api/leer-portada:', error);
+    mostrarEstadoIA('Sin conexion con el servidor. Escribe titulo y autor a mano.', 'error');
+    return;
   }
+
+  const cuerpo = await respuesta.text();
+  let datos = null;
+  try {
+    datos = JSON.parse(cuerpo);
+  } catch (error) {
+    // Respuesta que no es JSON: casi siempre el HTML de un 404, es decir
+    // que /api/leer-portada no existe en el sitio donde esta corriendo
+    // la app (por ejemplo sirviendola en local con un servidor estatico).
+    console.error('Respuesta no-JSON de /api/leer-portada:', respuesta.status, cuerpo.slice(0, 200));
+    mostrarEstadoIA(`La funcion /api/leer-portada no responde (HTTP ${respuesta.status}). Solo funciona en el despliegue de Vercel, no en un servidor estatico local.`, 'error');
+    return;
+  }
+
+  if (!respuesta.ok) {
+    console.error('Error de /api/leer-portada:', respuesta.status, datos);
+    mostrarEstadoIA(`No se pudo leer la portada: ${datos.error || `HTTP ${respuesta.status}`}`, 'error');
+    return;
+  }
+
+  if (!datos.titulo && !datos.autor) {
+    mostrarEstadoIA('No se ha podido leer el titulo ni el autor de esta foto. Escribelos a mano.', 'error');
+    return;
+  }
+
+  if (datos.titulo) inputTitulo.value = datos.titulo;
+  if (datos.autor) inputAutor.value = datos.autor;
+  mostrarEstadoIA('Rellenado automaticamente, revisa que este bien.');
 }
 
 // Guardamos el archivo real (se sube a Supabase Storage al enviar el
@@ -69,7 +120,7 @@ inputPortada.addEventListener('change', () => {
 
   if (!file) {
     previewPortada.hidden = true;
-    estadoLecturaIA.hidden = true;
+    ocultarEstadoIA();
     return;
   }
 
@@ -100,7 +151,7 @@ form.addEventListener('submit', async (event) => {
     inputFechaFin.value = hoyISO();
     portadaFile = null;
     previewPortada.hidden = true;
-    estadoLecturaIA.hidden = true;
+    ocultarEstadoIA();
 
     await actualizarContador();
 

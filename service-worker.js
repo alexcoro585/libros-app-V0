@@ -4,7 +4,7 @@
  * el cache solo como respaldo cuando no hay conexion.
  */
 
-const CACHE_NAME = 'libros-app-v7';
+const CACHE_NAME = 'libros-app-v8';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
@@ -42,6 +42,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Las llamadas a /api (POST a la funcion que lee la portada) se dejan
+  // pasar tal cual: no se pueden cachear (cache.put rechaza cualquier
+  // peticion que no sea GET) y no tiene sentido servirlas sin conexion.
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
+
   event.respondWith(
     fetch(event.request)
       .then((respuestaRed) => {
