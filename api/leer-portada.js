@@ -5,7 +5,10 @@
  * entorno GEMINI_API_KEY en Vercel), nunca llega al navegador.
  */
 
-const MODELO = 'gemini-2.0-flash';
+// Google apago gemini-2.0-flash. 3.5 Flash-Lite es el mas barato de los
+// actuales que acepta imagenes, que es lo unico que hace falta aqui.
+// Se puede cambiar sin tocar el codigo con la variable GEMINI_MODELO.
+const MODELO = process.env.GEMINI_MODELO || 'gemini-3.5-flash-lite';
 
 const PROMPT = 'Mira la portada de este libro y responde SOLO con un JSON de la forma '
   + '{"titulo": "...", "autor": "..."}, con el titulo y el autor exactos tal como aparecen '
@@ -58,6 +61,9 @@ export default async function handler(req, res) {
               { inline_data: { mime_type: 'image/jpeg', data: imagenBase64 } },
             ],
           }],
+          // Pedimos JSON directamente en vez de confiar en que el modelo
+          // no envuelva la respuesta en ```json.
+          generationConfig: { responseMimeType: 'application/json' },
         }),
       }
     );
